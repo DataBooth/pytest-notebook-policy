@@ -24,6 +24,29 @@ In practice:
 - use **marimo check** for core notebook validity and formatting rules
 - use **pytest-marimo** for extra policy checks around reactive design and notebook maintainability
 
+## Machine-assisted coding guardrails
+`pytest-marimo` is especially useful as an automated quality gate when notebooks are generated or edited by coding agents (for example Claude, Warp, Codex, or similar tools).
+
+Adding it to pre-commit and CI helps catch marimo-specific issues immediately, so agents can self-correct before code reaches review.
+
+Example pre-commit hook:
+
+```yaml
+repos:
+  - repo: local
+    hooks:
+      - id: pytest-marimo-quality
+        name: pytest-marimo-quality
+        entry: uv run pytest-marimo-quality experiments notebooks
+        language: system
+        pass_filenames: false
+```
+
+This keeps the feedback loop short:
+- agent proposes notebook edits
+- pre-commit/CI runs Ruff + `pytest-marimo` checks
+- agent fixes violations and retries
+
 ## Current rules
 - `M001`: prefer reactive dependencies over `on_change` handlers.
 - `M002`: keep test cells focused; avoid mixing tests with helper/setup code in the same cell.
