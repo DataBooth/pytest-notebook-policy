@@ -1,0 +1,13 @@
+The files in this folder are sourced from public repositories to provide real-world marimo notebook fixtures.
+
+- marimo_examples_ui_file.py
+  Source: https://raw.githubusercontent.com/marimo-team/marimo/main/examples/ui/file.py
+
+- marimo_smoke_cross_cell_md.py
+  Source: https://raw.githubusercontent.com/marimo-team/marimo/main/marimo/_smoke_tests/markdown/cross_cell_md.py
+
+- gallery_matrix.py
+  Source: https://raw.githubusercontent.com/marimo-team/gallery-examples/main/notebooks/math/matrix.py
+
+- gallery_earthquake.py
+  Source: https://raw.githubusercontent.com/marimo-team/gallery-examples/main/notebooks/geo/earthquake.py
