@@ -114,6 +114,15 @@ uv run pytest-notebook-quality --skip-ruff \
   --report-dependency-enrichment \
   notebooks/
 ```
+Include optional vulnerability IDs (queried from OSV):
+
+```shell
+uv run pytest-notebook-quality --skip-ruff \
+  --report-nbom-json reports/notebook-policy-nbom.json \
+  --report-dependency-vulns \
+  notebooks/
+```
+`--report-dependency-vulns` implicitly enables dependency enrichment.
 
 Write a markdown report (with why/remediation guidance per finding):
 
@@ -142,6 +151,7 @@ jupyter_max_cell_lines = 120
 jupyter_max_inline_definitions = 5
 report_md = "reports/notebook-policy-report.md"
 report_dependency_enrichment = true
+report_dependency_vulns = false
 report_nbom_json = "reports/notebook-policy-nbom.json"
 ```
 
