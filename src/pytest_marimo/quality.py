@@ -44,7 +44,7 @@ def main() -> None:
 
 def _run_ruff(paths: list[str]) -> int:
     command = [sys.executable, "-m", "ruff", "check", *paths]
-    completed = subprocess.run(command, check=False)
+    completed = subprocess.run(command, check=False)  # noqa: S603
     return completed.returncode
 
 
