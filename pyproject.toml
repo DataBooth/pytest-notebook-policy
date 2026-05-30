@@ -1,21 +1,45 @@
 [project]
-name = "pytest-marimo"
-version = "0.1.0"
-description = "Pytest plugin for marimo notebook quality checks"
+name = "pytest-notebook-policy"
+version = "0.8.0"
+description = "Pytest plugin for notebook policy and quality checks"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     { name = "Michael Booth", email = "michael@databooth.com.au" }
+]
+keywords = ["pytest", "marimo", "jupyter", "notebooks", "lint", "quality", "policy"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
 ]
 requires-python = ">=3.10"
 dependencies = [
     "pytest>=8.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/DataBooth/pytest-notebook-policy"
+Repository = "https://github.com/DataBooth/pytest-notebook-policy"
+Issues = "https://github.com/DataBooth/pytest-notebook-policy/issues"
+
 [project.scripts]
-pytest-marimo-quality = "pytest_marimo.quality:main"
+pytest-notebook-quality = "pytest_notebook_policy.quality:main"
 
 [project.entry-points.pytest11]
-marimo = "pytest_marimo.plugin"
+notebook_policy = "pytest_notebook_policy.plugin"
+
+[project.optional-dependencies]
+sync = [
+    "jupytext>=1.16",
+]
 
 [build-system]
 requires = ["uv_build>=0.11.7,<0.12.0"]
@@ -23,6 +47,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "jupytext>=1.16",
     "pytest>=8.0",
     "ruff>=0.14.0",
 ]
@@ -30,6 +55,7 @@ dev = [
 [tool.ruff]
 target-version = "py310"
 line-length = 100
+extend-exclude = ["tests/fixtures/real/*.ipynb"]
 
 [tool.ruff.lint]
 extend-select = ["S"]
@@ -37,6 +63,13 @@ extend-select = ["S"]
 [tool.ruff.lint.per-file-ignores]
 "experiments/**/*.ipynb" = ["S311"]
 "experiments/**/*.py" = ["B018", "S311"]
-"src/pytest_marimo/quality.py" = ["S603"]
+"src/pytest_notebook_policy/quality.py" = ["S603"]
 "tests/**/*.py" = ["S101"]
+"tests/fixtures/**/*.ipynb" = ["S311"]
 "tests/fixtures/**/*.py" = ["B018", "S311"]
+
+[tool.uv.workspace]
+members = [
+    "tmp/manual_checks/experiments",
+    ".",
+]
