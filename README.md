@@ -1,10 +1,14 @@
-# pytest-marimo
-`pytest-marimo` is a `pytest` plugin that enforces marimo notebook quality rules.
+# pytest-notebook-policy
+[![CI](https://github.com/DataBooth/pytest-notebook-policy/actions/workflows/ci.yml/badge.svg)](https://github.com/DataBooth/pytest-notebook-policy/actions/workflows/ci.yml)
+`pytest-notebook-policy` is a `pytest` plugin that enforces notebook policy and quality rules.
 
-It is aimed at checks that are specific to marimo’s reactive notebook model, not generic Python linting.
+It focuses on notebook-specific checks for marimo and Jupyter workflows, not generic Python linting.
+
+## Terminology and discoverability
+If you are looking for notebook **best practices**, **assurance**, **validation**, or **testing** tooling, this project is intended to cover those needs through enforceable policy checks and automated quality gates.
 
 ## What this package is
-`pytest-marimo` is a lightweight semantic checker for marimo notebooks that runs in Python tooling workflows.
+`pytest-notebook-policy` is a lightweight semantic checker for notebook workflows.
 
 It focuses on enforcing notebook patterns that are easy to miss in review, such as:
 - `on_change` callback usage where reactivity is clearer
@@ -17,15 +21,15 @@ marimo already gives you:
 - native notebook testing with `pytest`
 - built-in notebook linting via `marimo check` ([announcement](https://marimo.io/blog/marimo-check))
 
-`pytest-marimo` is designed to complement those tools with opinionated, team-level checks tailored to a stricter “production notebook” style.
+`pytest-notebook-policy` is designed to complement those tools with opinionated, team-level checks tailored to a stricter “production notebook” style.
 
 In practice:
 - use **Ruff** for general Python quality/security
 - use **marimo check** for core notebook validity and formatting rules
-- use **pytest-marimo** for extra policy checks around reactive design and notebook maintainability
+- use **pytest-notebook-policy** for extra policy checks around reactive design and notebook maintainability
 
 ## Machine-assisted coding guardrails
-`pytest-marimo` is especially useful as an automated quality gate when notebooks are generated or edited by coding agents (for example Claude, Warp, Codex, or similar tools).
+`pytest-notebook-policy` is especially useful as an automated quality gate when notebooks are generated or edited by coding agents (for example Claude, Warp, Codex, or similar tools).
 
 Adding it to pre-commit and CI helps catch marimo-specific issues immediately, so agents can self-correct before code reaches review.
 
@@ -35,16 +39,16 @@ Example pre-commit hook:
 repos:
   - repo: local
     hooks:
-      - id: pytest-marimo-quality
-        name: pytest-marimo-quality
-        entry: uv run pytest-marimo-quality experiments notebooks
+      - id: pytest-notebook-quality
+        name: pytest-notebook-quality
+        entry: uv run pytest-notebook-quality experiments notebooks
         language: system
         pass_filenames: false
 ```
 
 This keeps the feedback loop short:
 - agent proposes notebook edits
-- pre-commit/CI runs Ruff + `pytest-marimo` checks
+- pre-commit/CI runs Ruff + `pytest-notebook-policy` checks
 - agent fixes violations and retries
 
 ## Current rules
@@ -54,46 +58,174 @@ This keeps the feedback loop short:
 - `M004`: prefer fixtures in `conftest.py` or helper modules rather than notebook modules.
 - `M005`: avoid cross-cell mutation of shared objects (including notebook inputs and module-level mutable state).
 - `M006`: avoid non-idempotent calls in cells (for example `random.*`, `np.random.*`, `time.time`, `uuid.uuid4`).
+- `J001`: avoid notebook magics and shell escapes in policy-checked notebooks.
+- `J002`: avoid non-idempotent calls in Jupyter notebook code cells.
+- `J010`: (opt-in) check that paired `.ipynb` and `.py` files stay in sync.
+- `J011`: require a top-of-notebook parameter/configuration cell in the first few code cells.
+- `J012`: keep notebooks and cells small enough to stay reviewable and maintainable.
+- `J013`: avoid excessive inline function/class definitions in notebooks; extract reusable logic into modules.
+Detailed rationale and remediation guidance: [`docs/RULES.md`](docs/RULES.md).
 
 ## Usage
 Install in a project:
 
-```shell path=null start=null
-uv add --dev pytest-marimo
+```shell
+uv add --dev pytest-notebook-policy
 ```
+
+Install pre-commit hooks:
+
+```shell
+uv run --with pre-commit pre-commit install
+```
+
+Run hooks across all files:
+
+```shell
+uv run --with pre-commit pre-commit run --all-files
+```
+
+CI runs on push/PR using `.github/workflows/ci.yml` and executes Ruff plus the test suite.
 
 Run checks explicitly:
 
-```shell path=null start=null
-uv run pytest --marimo-check
+```shell
+uv run pytest --notebook-check
 ```
 
 Enable by default in `pyproject.toml`:
 
-```toml path=null start=null
+```toml
 [tool.pytest.ini_options]
-marimo_check = true
+notebook_check = true
 ```
 
 Filter rules:
 
-```shell path=null start=null
-uv run pytest --marimo-check --marimo-check-select M001 --marimo-check-ignore M004
+```shell
+uv run pytest --notebook-check --notebook-check-select M001 --notebook-check-ignore M004
 ```
 
-Run combined Ruff + pytest-marimo semantic checks:
+Choose Jupyter rule source:
 
-```shell path=null start=null
-uv run pytest-marimo-quality path/to/notebooks
+```shell
+uv run pytest --notebook-check --notebook-check-jupyter-source paired-py
 ```
 
-Skip Ruff and run only pytest-marimo semantic checks:
+Set default Jupyter rule source in `pyproject.toml`:
 
-```shell path=null start=null
-uv run pytest-marimo-quality --skip-ruff path/to/notebooks
+```toml
+[tool.pytest.ini_options]
+notebook_check = true
+notebook_check_jupyter_source = "paired-py"
+```
+
+`paired-py` prefers the paired `.py` notebook (when available and readable) for J-rules and falls back to `.ipynb`.
+
+Tune Jupyter size/complexity thresholds:
+
+```shell
+uv run pytest --notebook-check \
+  --notebook-check-jupyter-max-code-cells 30 \
+  --notebook-check-jupyter-max-cell-lines 120 \
+  --notebook-check-jupyter-max-inline-definitions 5
+```
+
+Set defaults in `pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options]
+notebook_check_jupyter_max_code_cells = "30"
+notebook_check_jupyter_max_cell_lines = "120"
+notebook_check_jupyter_max_inline_definitions = "5"
+```
+
+Run combined Ruff + notebook policy checks:
+
+```shell
+uv run pytest-notebook-quality path/to/notebooks
+```
+
+Skip Ruff and run only notebook policy checks:
+
+```shell
+uv run pytest-notebook-quality --skip-ruff path/to/notebooks
+```
+
+Customise deterministic rule toggles and thresholds on the quality command:
+
+```shell
+uv run pytest-notebook-quality --skip-ruff \
+  --notebook-check-select M \
+  --notebook-check-select J \
+  --notebook-check-ignore J010 \
+  --notebook-check-jupyter-source paired-py \
+  --notebook-check-jupyter-max-code-cells 30 \
+  --notebook-check-jupyter-max-cell-lines 120 \
+  --notebook-check-jupyter-max-inline-definitions 5 \
+  path/to/notebooks
+```
+
+Generate a markdown report with findings-first layout, touchpoint summary, and appendices:
+
+```shell
+uv run pytest-notebook-quality --skip-ruff --report-md reports/notebook-policy-report.md path/to/notebooks
+```
+
+Enable optional dependency enrichment in the report:
+
+```shell
+uv run pytest-notebook-quality --skip-ruff \
+  --report-md reports/notebook-policy-report.md \
+  --report-dependency-enrichment \
+  path/to/notebooks
+```
+
+Project-specific quality defaults can be set in `pyproject.toml`:
+
+```toml
+[tool.pytest_notebook_policy.quality]
+select = ["M", "J"]
+ignore = ["J010"]
+jupyter_source = "paired-py"
+jupyter_max_code_cells = 30
+jupyter_max_cell_lines = 120
+jupyter_max_inline_definitions = 5
+report_md = "reports/notebook-policy-report.md"
+report_dependency_enrichment = true
+```
+
+Enable optional sync tooling:
+
+```shell
+uv add --dev 'pytest-notebook-policy[sync]'
+```
+
+## Versioning and release workflow
+- Versioning follows Semantic Versioning (`MAJOR.MINOR.PATCH`).
+- Release history lives in `RELEASE_NOTES.md`.
+
+Typical release flow:
+
+```shell
+uv version --bump patch
+uv build
+uv run --with twine twine check dist/*
+```
+
+When ready to release (not run yet here), upload with Twine:
+
+```shell
+uv run --with twine twine upload dist/*
 ```
 ## Notebook fixtures for testing
 The repository includes notebook fixtures in `tests/fixtures`:
 
 - `tests/fixtures/synthetic`: synthetic notebooks for targeted pass/fail checks.
-- `tests/fixtures/real`: real-world notebooks sourced from public marimo repositories (with provenance in `tests/fixtures/real/SOURCES.txt`).
+- `tests/fixtures/real`: real-world notebooks sourced from public repositories (with provenance in `tests/fixtures/real/SOURCES.txt`).
+
+Refresh pinned real fixtures and print their observed rule-code sets:
+
+```shell
+uv run python scripts/refresh_real_fixtures.py
+```
