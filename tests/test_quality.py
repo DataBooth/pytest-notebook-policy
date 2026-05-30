@@ -6,9 +6,12 @@ from pathlib import Path
 
 from pytest_notebook_policy.plugin import Violation
 from pytest_notebook_policy.quality import (
+    _analyse_notebooks,
+    _collect_dependency_metadata,
     _load_project_quality_defaults,
     _resolve_quality_settings,
     _write_markdown_report,
+    _write_nbom_manifest,
 )
 
 
@@ -22,6 +25,7 @@ def _namespace(**overrides: object) -> argparse.Namespace:
         "notebook_check_jupyter_max_inline_definitions": None,
         "report_md": None,
         "report_dependency_enrichment": False,
+        "report_nbom_json": None,
     }
     base.update(overrides)
     return argparse.Namespace(**base)
@@ -45,6 +49,7 @@ ignore = ["M004"]
 jupyter_max_inline_definitions = 6
 report_md = "reports/notebook-policy.md"
 report_dependency_enrichment = true
+report_nbom_json = "reports/notebook-policy-nbom.json"
 """,
         encoding="utf-8",
     )
@@ -65,6 +70,7 @@ report_dependency_enrichment = true
     assert defaults.max_inline_definitions == 6
     assert defaults.report_md == "reports/notebook-policy.md"
     assert defaults.report_dependency_enrichment is True
+    assert defaults.report_nbom_json == "reports/notebook-policy-nbom.json"
 
 
 def test_resolve_quality_settings_applies_cli_overrides(tmp_path: Path) -> None:
@@ -95,6 +101,7 @@ report_md = "reports/default.md"
         notebook_check_jupyter_max_inline_definitions=8,
         report_md="reports/cli.md",
         report_dependency_enrichment=True,
+        report_nbom_json="reports/nbom.json",
     )
 
     previous_cwd = Path.cwd()
@@ -116,6 +123,8 @@ report_md = "reports/default.md"
     assert settings.report_md is not None
     assert settings.report_md.name == "cli.md"
     assert settings.report_dependency_enrichment is True
+    assert settings.report_nbom_json is not None
+    assert settings.report_nbom_json.name == "nbom.json"
 
 
 def test_write_markdown_report_includes_guidance(tmp_path: Path) -> None:
@@ -173,3 +182,26 @@ def test_write_markdown_report_dependency_enrichment_appendix(tmp_path: Path) ->
     )
     content = report_path.read_text(encoding="utf-8")
     assert "## Appendix C — Dependency enrichment" in content
+
+
+def test_write_nbom_manifest(tmp_path: Path) -> None:
+    nbom_path = tmp_path / "reports" / "manifest.json"
+    settings = _resolve_quality_settings([], _namespace(report_dependency_enrichment=True))
+    sample_file = tmp_path / "sample.py"
+    sample_file.write_text("import requests\nURL='https://example.com'\n", encoding="utf-8")
+    analysis = _analyse_notebooks([sample_file])
+    dependencies = _collect_dependency_metadata(analysis.imports)
+    _write_nbom_manifest(
+        destination=nbom_path,
+        settings=settings,
+        violations=[],
+        scanned_files=[sample_file],
+        analysis=analysis,
+        dependency_rows=dependencies,
+        started_at=datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC),
+        runtime_seconds=0.75,
+    )
+    content = nbom_path.read_text(encoding="utf-8")
+    assert "\"schema_version\": \"0.1\"" in content
+    assert "\"surface\"" in content
+    assert "\"dependencies\"" in content

@@ -116,6 +116,7 @@ class QualityDefaults:
     max_inline_definitions: int | None = None
     report_md: str | None = None
     report_dependency_enrichment: bool | None = None
+    report_nbom_json: str | None = None
 
 
 @dataclass(frozen=True)
@@ -128,6 +129,7 @@ class QualitySettings:
     max_inline_definitions: int
     report_md: Path | None
     report_dependency_enrichment: bool
+    report_nbom_json: Path | None
 
 
 @dataclass(frozen=True)
@@ -213,6 +215,13 @@ def main() -> None:
         action="store_true",
         help="Add optional dependency metadata in the report.",
     )
+    parser.add_argument(
+        "--report-nbom-json",
+        action="store",
+        default=None,
+        metavar="PATH",
+        help="Write an NBOM-style JSON manifest for scanned notebooks.",
+    )
     args = parser.parse_args()
 
     path_args = [str(Path(path).expanduser()) for path in args.paths]
@@ -232,6 +241,23 @@ def main() -> None:
             settings=settings,
             violations=violations,
             scanned_files=scanned_files,
+            started_at=started_at,
+            runtime_seconds=runtime_seconds,
+        )
+    if settings.report_nbom_json is not None:
+        analysis = _analyse_notebooks(scanned_files)
+        dependencies = (
+            _collect_dependency_metadata(analysis.imports)
+            if settings.report_dependency_enrichment
+            else []
+        )
+        _write_nbom_manifest(
+            settings.report_nbom_json,
+            settings=settings,
+            violations=violations,
+            scanned_files=scanned_files,
+            analysis=analysis,
+            dependency_rows=dependencies,
             started_at=started_at,
             runtime_seconds=runtime_seconds,
         )
@@ -320,6 +346,12 @@ def _resolve_quality_settings(paths: list[str], args: argparse.Namespace) -> Qua
     )
     report_md_raw = args.report_md if args.report_md is not None else defaults.report_md
     report_md = Path(report_md_raw).expanduser().resolve() if report_md_raw else None
+    report_nbom_raw = (
+        args.report_nbom_json if args.report_nbom_json is not None else defaults.report_nbom_json
+    )
+    report_nbom_json = (
+        Path(report_nbom_raw).expanduser().resolve() if report_nbom_raw else None
+    )
     report_dependency_enrichment = args.report_dependency_enrichment or bool(
         defaults.report_dependency_enrichment
     )
@@ -333,6 +365,7 @@ def _resolve_quality_settings(paths: list[str], args: argparse.Namespace) -> Qua
         max_inline_definitions=max_inline_definitions,
         report_md=report_md,
         report_dependency_enrichment=report_dependency_enrichment,
+        report_nbom_json=report_nbom_json,
     )
 
 
@@ -372,6 +405,7 @@ def _load_project_quality_defaults(paths: list[str]) -> QualityDefaults:
     )
     report_md = _coerce_string(quality_tool.get("report_md"))
     report_dependency_enrichment = _coerce_bool(quality_tool.get("report_dependency_enrichment"))
+    report_nbom_json = _coerce_string(quality_tool.get("report_nbom_json"))
     return QualityDefaults(
         select_tokens=tuple(select_tokens),
         ignore_tokens=tuple(ignore_tokens),
@@ -381,6 +415,7 @@ def _load_project_quality_defaults(paths: list[str]) -> QualityDefaults:
         max_inline_definitions=max_inline_definitions,
         report_md=report_md,
         report_dependency_enrichment=report_dependency_enrichment,
+        report_nbom_json=report_nbom_json,
     )
 
 
@@ -526,6 +561,7 @@ def _write_markdown_report(
     lines.append(f"| Jupyter max cell lines | `{settings.max_cell_lines}` |")
     lines.append(f"| Jupyter max inline definitions | `{settings.max_inline_definitions}` |")
     lines.append(f"| Dependency enrichment | `{settings.report_dependency_enrichment}` |")
+    lines.append(f"| NBOM output path | `{settings.report_nbom_json or '(disabled)'}` |")
     lines.append("")
     lines.append("## Appendix B — Scanned files")
     lines.append("")
@@ -680,6 +716,112 @@ def _collect_dependency_metadata(import_names: set[str]) -> list[tuple[str, str,
         homepage = metadata.get("Home-page", "-") or "-"
         rows.append((import_name, package_name, version, license_name, homepage))
     return rows
+
+
+def _write_nbom_manifest(
+    destination: Path,
+    settings: QualitySettings,
+    violations: list[Violation],
+    scanned_files: list[Path],
+    analysis: NotebookAnalysis,
+    dependency_rows: list[tuple[str, str, str, str, str]],
+    started_at: datetime,
+    runtime_seconds: float,
+) -> None:
+    dependency_capability_map = _dependency_capabilities(dependency_rows)
+    manifest = {
+        "schema_version": "0.1",
+        "generated_at": started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "runtime_seconds": round(runtime_seconds, 4),
+        "tool": "pytest-notebook-policy",
+        "settings": {
+            "select": sorted(settings.select),
+            "ignore": sorted(settings.ignore),
+            "jupyter_source": settings.jupyter_source,
+            "max_code_cells": settings.max_code_cells,
+            "max_cell_lines": settings.max_cell_lines,
+            "max_inline_definitions": settings.max_inline_definitions,
+            "dependency_enrichment": settings.report_dependency_enrichment,
+        },
+        "files": [
+            {"path": _display_path(path), "type": path.suffix or "n/a"}
+            for path in scanned_files
+        ],
+        "violations": [
+            {
+                "path": _display_path(violation.path),
+                "line": violation.line,
+                "code": violation.code,
+                "message": violation.message,
+            }
+            for violation in violations
+        ],
+        "surface": {
+            "imports": sorted(analysis.imports),
+            "file_references": [
+                {"path": _display_path(item.path), "value": item.value}
+                for item in sorted(
+                    analysis.file_references,
+                    key=lambda item: (_display_path(item.path), item.value),
+                )
+            ],
+            "http_requests": [
+                {"path": _display_path(item.path), "value": item.value}
+                for item in sorted(
+                    analysis.http_requests,
+                    key=lambda item: (_display_path(item.path), item.value),
+                )
+            ],
+            "data_sources": [
+                {"path": _display_path(item.path), "value": item.value}
+                for item in sorted(
+                    analysis.data_sources,
+                    key=lambda item: (_display_path(item.path), item.value),
+                )
+            ],
+        },
+        "dependencies": [
+            {
+                "import": row[0],
+                "package": row[1],
+                "version": row[2],
+                "licence": row[3],
+                "homepage": row[4],
+                "capabilities": sorted(dependency_capability_map.get(row[0], set())),
+            }
+            for row in dependency_rows
+        ],
+        "summary": {
+            "files_scanned": len(scanned_files),
+            "violations": len(violations),
+            "imports": len(analysis.imports),
+            "file_references": len(analysis.file_references),
+            "http_requests": len(analysis.http_requests),
+            "data_sources": len(analysis.data_sources),
+            "dependencies": len(dependency_rows),
+        },
+    }
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _dependency_capabilities(
+    dependency_rows: list[tuple[str, str, str, str, str]]
+) -> dict[str, set[str]]:
+    capabilities: dict[str, set[str]] = {}
+    for import_name, package_name, *_ in dependency_rows:
+        key = import_name.lower()
+        inferred: set[str] = set()
+        if key in {"requests", "httpx", "urllib3"}:
+            inferred.add("http_requests")
+        if key in {"pandas", "pyarrow", "openpyxl"}:
+            inferred.update({"file_references", "data_sources"})
+        if key in {"sqlalchemy", "psycopg2", "mysql", "sqlite3"}:
+            inferred.add("data_sources")
+        if package_name == "(unresolved)":
+            inferred.add("unresolved")
+        capabilities[import_name] = inferred
+    return capabilities
 
 
 def _display_path(path: Path) -> str:

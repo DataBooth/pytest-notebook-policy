@@ -106,6 +106,15 @@ uv run pytest-notebook-quality --skip-ruff \
   notebooks/
 ```
 
+Write an NBOM-style JSON manifest:
+
+```shell
+uv run pytest-notebook-quality --skip-ruff \
+  --report-nbom-json reports/notebook-policy-nbom.json \
+  --report-dependency-enrichment \
+  notebooks/
+```
+
 Write a markdown report (with why/remediation guidance per finding):
 
 ```shell
@@ -133,6 +142,7 @@ jupyter_max_cell_lines = 120
 jupyter_max_inline_definitions = 5
 report_md = "reports/notebook-policy-report.md"
 report_dependency_enrichment = true
+report_nbom_json = "reports/notebook-policy-nbom.json"
 ```
 
 Enable optional sync tooling:
