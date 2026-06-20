@@ -1,4 +1,4 @@
-"""pytest-marimo package."""
+"""pytest-notebook-policy package."""
 
 from .plugin import Violation, scan_file
 

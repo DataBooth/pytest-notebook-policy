@@ -9,6 +9,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from jinja2 import Environment
 from pathlib import Path
 import time
 import tomllib
@@ -23,6 +24,7 @@ from .plugin import (
     Violation,
     scan_file,
 )
+from .report_templates import MARKDOWN_REPORT_TEMPLATE
 
 RULE_GUIDANCE: dict[str, tuple[str, str]] = {
     "M001": (
@@ -484,6 +486,12 @@ def _coerce_positive_int(raw: object, fallback: int | None) -> int | None:
     return value
 
 
+MARKDOWN_REPORT_RENDERER = Environment(  # noqa: S701
+    trim_blocks=True,
+    lstrip_blocks=True,
+    keep_trailing_newline=True,
+).from_string(MARKDOWN_REPORT_TEMPLATE)
+
 def _write_markdown_report(
     destination: Path,
     settings: QualitySettings,
@@ -494,100 +502,103 @@ def _write_markdown_report(
 ) -> None:
     analysis = _analyse_notebooks(scanned_files)
     dependencies = _collect_dependency_metadata(analysis.imports) if settings.report_dependency_enrichment else []
-
-    lines: list[str] = []
     status = "✅ Pass" if not violations else "⚠️ Findings"
-    lines.append("## 🧪 Notebook policy report")
-    lines.append("")
-    lines.append("| Metric | Value |")
-    lines.append("|---|---|")
-    lines.append(f"| Status | {status} |")
-    lines.append(f"| Generated | `{started_at.strftime('%Y-%m-%d %H:%M:%S UTC')}` |")
-    lines.append(f"| Runtime | `{runtime_seconds:.2f}s` |")
-    lines.append(f"| Files scanned | `{len(scanned_files)}` |")
-    lines.append(f"| Violations | `{len(violations)}` |")
-    lines.append("")
-    lines.append("### 🔎 Findings")
-    lines.append("")
-    if not violations:
-        lines.append("No notebook policy violations were found.")
+    if violations:
+        exec_summary_text = (
+            "Policy findings were detected. This report helps you triage reproducibility and "
+            "maintainability risks, then apply targeted remediation with clear rationale."
+        )
     else:
-        lines.append("| File | Rule | Line | What | Why this is undesirable | Suggested fix |")
-        lines.append("|---|---|---:|---|---|---|")
-        for violation in violations:
-            why, remediation = RULE_GUIDANCE.get(
-                violation.code,
-                (
-                    "This rule highlights a notebook policy concern.",
-                    "Review the rule context and apply an appropriate fix.",
-                ),
-            )
-            lines.append(
-                f"| `{_display_path(violation.path)}` | {_rule_link(violation.code)} | `{violation.line}` | "
-                f"{_escape_markdown_table_text(violation.message)} | {_escape_markdown_table_text(why)} | "
-                f"{_escape_markdown_table_text(remediation)} |"
-            )
-    lines.append("")
-    lines.append("### 🧭 Notebook surface summary")
-    lines.append("")
-    lines.append("| Category | Count |")
-    lines.append("|---|---:|")
-    lines.append(f"| Key imports | `{len(analysis.imports)}` |")
-    lines.append(f"| File references | `{len(analysis.file_references)}` |")
-    lines.append(f"| HTTP requests | `{len(analysis.http_requests)}` |")
-    lines.append(f"| Data sources | `{len(analysis.data_sources)}` |")
-    lines.append("")
-    lines.append("#### Key imports")
-    lines.append("")
-    lines.append("| Import |")
-    lines.append("|---|")
-    for name in sorted(analysis.imports):
-        lines.append(f"| `{name}` |")
-    if not analysis.imports:
-        lines.append("| `(none)` |")
-    lines.append("")
-    lines.extend(_observed_table("#### File references", "Reference", analysis.file_references))
-    lines.extend(_observed_table("#### HTTP requests", "Endpoint", analysis.http_requests))
-    lines.extend(_observed_table("#### Data sources", "Source", analysis.data_sources))
-
-    lines.append("## Appendix A — Configuration")
-    lines.append("")
-    lines.append("| Setting | Value |")
-    lines.append("|---|---|")
-    lines.append(f"| Enabled rules/prefixes | `{', '.join(sorted(settings.select)) or '(none)'}` |")
-    lines.append(f"| Ignored rules/prefixes | `{', '.join(sorted(settings.ignore)) or '(none)'}` |")
-    lines.append(f"| Jupyter source mode | `{settings.jupyter_source}` |")
-    lines.append(f"| Jupyter max code cells | `{settings.max_code_cells}` |")
-    lines.append(f"| Jupyter max cell lines | `{settings.max_cell_lines}` |")
-    lines.append(f"| Jupyter max inline definitions | `{settings.max_inline_definitions}` |")
-    lines.append(f"| Dependency enrichment | `{settings.report_dependency_enrichment}` |")
-    lines.append(f"| NBOM output path | `{settings.report_nbom_json or '(disabled)'}` |")
-    lines.append("")
-    lines.append("## Appendix B — Scanned files")
-    lines.append("")
-    lines.append("| File | Type |")
-    lines.append("|---|---|")
-    for scanned_path in scanned_files:
-        lines.append(f"| `{_display_path(scanned_path)}` | `{scanned_path.suffix or 'n/a'}` |")
-    if not scanned_files:
-        lines.append("| `(none)` | `n/a` |")
-
-    if settings.report_dependency_enrichment:
-        lines.append("")
-        lines.append("## Appendix C — Dependency enrichment")
-        lines.append("")
-        lines.append("| Import | Package | Version | Licence | Homepage |")
-        lines.append("|---|---|---|---|---|")
-        for record in dependencies:
-            lines.append(
-                f"| `{record[0]}` | `{record[1]}` | `{record[2]}` | "
-                f"`{_escape_markdown_table_text(record[3])}` | `{_escape_markdown_table_text(record[4])}` |"
-            )
-        if not dependencies:
-            lines.append("| `(none)` | `(none)` | `(none)` | `(none)` | `(none)` |")
+        exec_summary_text = (
+            "No policy findings were detected. This report provides a reproducible quality record "
+            "for notebook governance and release confidence."
+        )
+    findings = []
+    for violation in violations:
+        why, remediation = RULE_GUIDANCE.get(
+            violation.code,
+            (
+                "This rule highlights a notebook policy concern.",
+                "Review the rule context and apply an appropriate fix.",
+            ),
+        )
+        findings.append(
+            {
+                "path": _display_path(violation.path),
+                "rule_link": _rule_link(violation.code),
+                "line": violation.line,
+                "message": _escape_markdown_table_text(violation.message),
+                "why": _escape_markdown_table_text(why),
+                "remediation": _escape_markdown_table_text(remediation),
+            }
+        )
+    scanned_rows = [
+        {"path": _display_path(path), "kind": path.suffix or "n/a"} for path in scanned_files
+    ]
+    file_references = [
+        {
+            "path": _display_path(item.path),
+            "value": _escape_markdown_table_text(item.value),
+        }
+        for item in sorted(analysis.file_references, key=lambda item: (_display_path(item.path), item.value))
+    ]
+    http_requests = [
+        {
+            "path": _display_path(item.path),
+            "value": _escape_markdown_table_text(item.value),
+        }
+        for item in sorted(analysis.http_requests, key=lambda item: (_display_path(item.path), item.value))
+    ]
+    data_sources = [
+        {
+            "path": _display_path(item.path),
+            "value": _escape_markdown_table_text(item.value),
+        }
+        for item in sorted(analysis.data_sources, key=lambda item: (_display_path(item.path), item.value))
+    ]
+    dependency_rows = [
+        {
+            "import_name": row[0],
+            "package": row[1],
+            "version": row[2],
+            "licence": _escape_markdown_table_text(row[3]),
+            "homepage": _escape_markdown_table_text(row[4]),
+        }
+        for row in dependencies
+    ]
+    nbom_output_path = str(settings.report_nbom_json) if settings.report_nbom_json else "(disabled)"
+    markdown = MARKDOWN_REPORT_RENDERER.render(
+        exec_summary_text=exec_summary_text,
+        status=status,
+        generated_at=started_at.strftime("%Y-%m-%d %H:%M:%S UTC"),
+        runtime_seconds=f"{runtime_seconds:.2f}",
+        files_scanned=len(scanned_files),
+        violations_count=len(violations),
+        findings=findings,
+        imports=sorted(analysis.imports),
+        imports_count=len(analysis.imports),
+        file_references=file_references,
+        file_references_count=len(analysis.file_references),
+        http_requests=http_requests,
+        http_requests_count=len(analysis.http_requests),
+        data_sources=data_sources,
+        data_sources_count=len(analysis.data_sources),
+        enabled_rules=", ".join(sorted(settings.select)) or "(none)",
+        ignored_rules=", ".join(sorted(settings.ignore)) or "(none)",
+        jupyter_source=settings.jupyter_source,
+        max_code_cells=settings.max_code_cells,
+        max_cell_lines=settings.max_cell_lines,
+        max_inline_definitions=settings.max_inline_definitions,
+        dependency_enrichment_enabled=settings.report_dependency_enrichment,
+        scanned_files=scanned_rows,
+        nbom_requested=settings.report_nbom_json is not None,
+        nbom_output_path=nbom_output_path,
+        dependency_count=len(dependencies),
+        dependencies=dependency_rows,
+    )
 
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    destination.write_text(markdown, encoding="utf-8")
 
 
 def _observed_table(title: str, value_label: str, values: set[Observed]) -> list[str]:

@@ -154,6 +154,8 @@ def test_write_markdown_report_includes_guidance(tmp_path: Path) -> None:
 
     content = report_path.read_text(encoding="utf-8")
     assert "## 🧪 Notebook policy report" in content
+    assert "### Executive summary" in content
+    assert "deterministic notebook quality snapshot" in content
     assert "| Runtime | `1.23s` |" in content
     assert "### 🔎 Findings" in content
     assert "### 🧭 Notebook surface summary" in content
@@ -162,6 +164,7 @@ def test_write_markdown_report_includes_guidance(tmp_path: Path) -> None:
     assert "s3://bucket/object.parquet" in content
     assert "## Appendix A — Configuration" in content
     assert "## Appendix B — Scanned files" in content
+    assert "## Appendix C — NBOM alignment" in content
     assert "bad.py" in content
     assert "[`M001`](https://github.com/DataBooth/pytest-notebook-policy/blob/main/docs/RULES.md#m001)" in content
     assert "| File | Rule | Line | What | Why this is undesirable | Suggested fix |" in content
@@ -181,7 +184,8 @@ def test_write_markdown_report_dependency_enrichment_appendix(tmp_path: Path) ->
         runtime_seconds=0.5,
     )
     content = report_path.read_text(encoding="utf-8")
-    assert "## Appendix C — Dependency enrichment" in content
+    assert "## Appendix C — NBOM alignment" in content
+    assert "## Appendix D — Dependency enrichment" in content
 
 
 def test_write_nbom_manifest(tmp_path: Path) -> None:
