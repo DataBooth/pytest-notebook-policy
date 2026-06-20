@@ -1,0 +1,29 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+      - name: Sync dependencies
+        run: uv sync --frozen --dev
+      - name: Ruff
+        run: uv run ruff check src tests
+      - name: Report regression contracts
+        run: uv run python -m pytest tests/test_quality.py tests/test_report_regressions.py
+      - name: Pytest
+        run: uv run python -m pytest tests

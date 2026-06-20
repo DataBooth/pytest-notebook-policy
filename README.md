@@ -67,6 +67,7 @@ This keeps the feedback loop short:
 Detailed rationale and remediation guidance: [`docs/RULES.md`](docs/RULES.md).
 
 ## Usage
+Runtime baseline: Python `3.12+`.
 Install in a project:
 
 ```shell
@@ -198,6 +199,7 @@ uv run pytest-notebook-quality --skip-ruff \
   --report-dependency-enrichment \
   path/to/notebooks
 ```
+Interpret report outputs and tune policy profiles: [`docs/REPORT_INTERPRETATION.md`](docs/REPORT_INTERPRETATION.md).
 
 Project-specific quality defaults can be set in `pyproject.toml`:
 
@@ -219,6 +221,27 @@ Enable optional sync tooling:
 
 ```shell
 uv add --dev 'pytest-notebook-policy[sync]'
+```
+
+## Documentation site (Great Docs)
+This repository uses Great Docs for documentation generation and deployment.
+
+Build docs locally:
+
+```shell
+uv run great-docs build
+```
+
+Preview docs locally:
+
+```shell
+uv run great-docs preview
+```
+
+Scaffold or refresh the GitHub Pages workflow:
+
+```shell
+uv run great-docs setup-github-pages
 ```
 
 ## Versioning and release workflow

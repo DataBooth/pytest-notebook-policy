@@ -5,6 +5,30 @@ This project follows Semantic Versioning (`MAJOR.MINOR.PATCH`).
 ### Changed
 - No unreleased entries yet.
 
+## [1.0.0] - Stable baseline + Great Docs foundation
+### Release intent
+- Mark the first stable major release and establish a modern runtime/docs baseline for ongoing development.
+
+### Highlights
+- Promoted package versioning to `1.0.0`.
+- Raised runtime support baseline to Python `3.12+`.
+- Updated Ruff target configuration to `py312`.
+- Added Great Docs integration for documentation generation and preview workflows.
+- Added GitHub Pages docs workflow scaffold via Great Docs (`.github/workflows/docs.yml`).
+- Expanded CI test matrix to validate against Python `3.12` and `3.13`.
+
+## [0.9.0] - Report UX and NBOM alignment
+### Release intent
+- Improve markdown report readability and operator guidance while keeping machine-readable NBOM output aligned.
+
+### Highlights
+- Refactored markdown report rendering to use a Jinja2 template.
+- Added standard executive summary guidance under the report header.
+- Added short descriptive text under major report sections to clarify purpose and usage.
+- Added Appendix C NBOM alignment summary fields for easier cross-checking against NBOM JSON output.
+- Shifted optional dependency metadata to Appendix D when enrichment is enabled.
+- Added regression assertions for updated report structure and section ordering.
+
 ## [0.8.0] - Planned initial PyPI release
 ### Release intent
 - First public release of `pytest-notebook-policy` to PyPI.

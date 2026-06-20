@@ -1,6 +1,6 @@
 [project]
 name = "pytest-notebook-policy"
-version = "0.8.0"
+version = "1.0.0"
 description = "Pytest plugin for notebook policy and quality checks"
 readme = "README.md"
 license = "MIT"
@@ -14,14 +14,13 @@ classifiers = [
     "Framework :: Pytest",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Quality Assurance",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
+    "jinja2>=3.1",
     "pytest>=8.0",
 ]
 
@@ -29,6 +28,7 @@ dependencies = [
 Homepage = "https://github.com/DataBooth/pytest-notebook-policy"
 Repository = "https://github.com/DataBooth/pytest-notebook-policy"
 Issues = "https://github.com/DataBooth/pytest-notebook-policy/issues"
+Documentation = "https://databooth.github.io/pytest-notebook-policy/"
 
 [project.scripts]
 pytest-notebook-quality = "pytest_notebook_policy.quality:main"
@@ -47,13 +47,14 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "great-docs>=0.14.0",
     "jupytext>=1.16",
     "pytest>=8.0",
     "ruff>=0.14.0",
 ]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py312"
 line-length = 100
 extend-exclude = ["tests/fixtures/real/*.ipynb"]
 
