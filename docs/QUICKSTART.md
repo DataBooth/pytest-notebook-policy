@@ -215,7 +215,7 @@ Enable optional sync tooling:
 uv add --dev 'pytest-notebook-policy[sync]'
 ```
 
-## 7) Optional: pre-commit hook
+## 7) Optional: prek hook
 Example local hook:
 
 ```yaml
@@ -227,6 +227,13 @@ repos:
         entry: uv run pytest-notebook-quality notebooks
         language: system
         pass_filenames: false
+```
+
+Install and run hooks:
+
+```shell
+uv run prek install
+uv run prek run pytest-notebook-quality --all-files
 ```
 
 ## 8) Manual validation and remediation workflow

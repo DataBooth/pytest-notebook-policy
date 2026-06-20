@@ -1,6 +1,6 @@
 [project]
 name = "pytest-notebook-policy"
-version = "1.0.0"
+version = "1.0.2"
 description = "Pytest plugin for notebook policy and quality checks"
 readme = "README.md"
 license = "MIT"
@@ -49,6 +49,7 @@ build-backend = "uv_build"
 dev = [
     "great-docs>=0.14.0",
     "jupytext>=1.16",
+    "prek>=0.4.5",
     "pytest>=8.0",
     "ruff>=0.14.0",
 ]

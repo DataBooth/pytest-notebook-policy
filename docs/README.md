@@ -2,7 +2,7 @@
 This directory contains focused documentation for `pytest-notebook-policy`.
 
 ## Available docs
-- [`QUICKSTART.md`](QUICKSTART.md): install, first run, and CI/pre-commit examples.
+- [`QUICKSTART.md`](QUICKSTART.md): install, first run, and CI/prek examples.
 - [`REPORT_INTERPRETATION.md`](REPORT_INTERPRETATION.md): interpreting markdown/NBOM outputs and tuning policy profiles proportionately.
 - [`JUST_SETUP.md`](JUST_SETUP.md): using the repository's `just` recipes and where to install Just.
 - [`MANUAL_NOTEBOOK_VALIDATION.md`](MANUAL_NOTEBOOK_VALIDATION.md): manual behaviour validation, second-stage remediation checklist, and authoring guide for new `.ipynb` and marimo `.py` notebooks.

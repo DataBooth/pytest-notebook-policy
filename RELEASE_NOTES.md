@@ -5,6 +5,18 @@ This project follows Semantic Versioning (`MAJOR.MINOR.PATCH`).
 ### Changed
 - No unreleased entries yet.
 
+## [1.0.2] - Hook tooling migration and docs quality fixes
+### Release intent
+- Improve local quality-gate ergonomics and documentation reliability without changing runtime policy behaviour.
+
+### Highlights
+- Migrated local hook tooling from `pre-commit` to `prek` using a dedicated `prek.toml` configuration.
+- Added `prek` as a development dependency and updated project docs/commands to use `prek`.
+- Added `just` hook helper recipes for installing and running repository hooks with `prek`.
+- Fixed README section/list formatting so key guidance renders correctly in generated docs output.
+- Removed legacy `.pre-commit-config.yaml` from the repository to avoid dual-config ambiguity.
+- Confirmed GitHub Pages deployment now runs via workflow mode with successful docs publication from `main`.
+
 ## [1.0.0] - Stable baseline + Great Docs foundation
 ### Release intent
 - Mark the first stable major release and establish a modern runtime/docs baseline for ongoing development.
