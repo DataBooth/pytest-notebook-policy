@@ -5,6 +5,7 @@ This directory contains focused documentation for `pytest-notebook-policy`.
 - [`QUICKSTART.md`](QUICKSTART.md): install, first run, and CI/prek examples.
 - [`REPORT_INTERPRETATION.md`](REPORT_INTERPRETATION.md): interpreting markdown/NBOM outputs and tuning policy profiles proportionately.
 - [`JUST_SETUP.md`](JUST_SETUP.md): using the repository's `just` recipes and where to install Just.
+- [`LLM_GUARDRAILS_PREK_BASELINE.md`](LLM_GUARDRAILS_PREK_BASELINE.md): deterministic LLM guardrail findings, repo application notes, and a reproducible cross-project `prek` strategy.
 - [`MANUAL_NOTEBOOK_VALIDATION.md`](MANUAL_NOTEBOOK_VALIDATION.md): manual behaviour validation, second-stage remediation checklist, and authoring guide for new `.ipynb` and marimo `.py` notebooks.
 - [`RULES.md`](RULES.md): detailed rule catalogue with concise rationale and remediation guidance.
 - [`../great-docs.yml`](../great-docs.yml): Great Docs site configuration used for generated package documentation.

@@ -5,7 +5,23 @@ on:
     branches:
       - main
 jobs:
+  hooks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+      - name: Sync dependencies
+        run: uv sync --frozen --dev
+      - name: Run prek hooks
+        run: uv run prek run --all-files
   test:
+    needs: hooks
     runs-on: ubuntu-latest
     strategy:
       matrix:

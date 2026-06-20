@@ -1,5 +1,38 @@
 [[repos]]
+repo = "builtin"
+
+[[repos.hooks]]
+id = "check-merge-conflict"
+
+[[repos.hooks]]
+id = "detect-private-key"
+
+[[repos.hooks]]
+id = "check-json"
+
+[[repos.hooks]]
+id = "check-yaml"
+
+[[repos.hooks]]
+id = "check-toml"
+[[repos]]
 repo = "local"
+
+[[repos.hooks]]
+id = "text-safety-check"
+name = "text-safety-check"
+entry = "uv run python scripts/check_text_safety.py"
+language = "system"
+files = "\\.(py|md|txt|toml|ya?ml|json|qmd|ini|cfg|lock|csv|ipynb)$"
+pass_filenames = true
+
+[[repos.hooks]]
+id = "python-sql-literal-check"
+name = "python-sql-literal-check"
+entry = "uv run python scripts/check_python_sql_literals.py"
+language = "system"
+files = "\\.py$"
+pass_filenames = true
 
 [[repos.hooks]]
 id = "ruff-check"
