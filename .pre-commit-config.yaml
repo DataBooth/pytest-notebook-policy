@@ -1,0 +1,18 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff-check
+        entry: uv run ruff check src tests
+        language: system
+        pass_filenames: false
+      - id: pytest-tests
+        name: pytest-tests
+        entry: uv run python -m pytest tests
+        language: system
+        pass_filenames: false
+      - id: pytest-report-regressions
+        name: pytest-report-regressions
+        entry: uv run python -m pytest tests/test_quality.py tests/test_report_regressions.py
+        language: system
+        pass_filenames: false

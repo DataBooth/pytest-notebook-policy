@@ -1,0 +1,63 @@
+{
+  "dependencies": [],
+  "files": [
+    {
+      "path": "tests/fixtures/real/jupyter_connecting_qt_console_v6_4_7.ipynb",
+      "type": ".ipynb"
+    }
+  ],
+  "generated_at": "2026-05-30T23:07:51Z",
+  "runtime_seconds": 0.0003,
+  "schema_version": "0.1",
+  "settings": {
+    "dependency_enrichment": false,
+    "ignore": [],
+    "jupyter_source": "ipynb",
+    "max_cell_lines": 80,
+    "max_code_cells": 20,
+    "max_inline_definitions": 3,
+    "select": [
+      "J001",
+      "J002",
+      "J011",
+      "J012",
+      "J013",
+      "M001",
+      "M002",
+      "M003",
+      "M004",
+      "M005",
+      "M006"
+    ]
+  },
+  "summary": {
+    "data_sources": 0,
+    "dependencies": 0,
+    "file_references": 0,
+    "files_scanned": 1,
+    "http_requests": 0,
+    "imports": 0,
+    "violations": 2
+  },
+  "surface": {
+    "data_sources": [],
+    "file_references": [],
+    "http_requests": [],
+    "imports": []
+  },
+  "tool": "pytest-notebook-policy",
+  "violations": [
+    {
+      "code": "J001",
+      "line": 1,
+      "message": "Avoid notebook magics/shell escapes in policy-checked notebooks; prefer Python code for reliable .ipynb\u2194.py sync.",
+      "path": "tests/fixtures/real/jupyter_connecting_qt_console_v6_4_7.ipynb"
+    },
+    {
+      "code": "J001",
+      "line": 5,
+      "message": "Avoid notebook magics/shell escapes in policy-checked notebooks; prefer Python code for reliable .ipynb\u2194.py sync.",
+      "path": "tests/fixtures/real/jupyter_connecting_qt_console_v6_4_7.ipynb"
+    }
+  ]
+}

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -77,7 +78,130 @@ JUPYTER_PARAMETER_CELL_NAMES = {
 JUPYTER_MAX_CODE_CELLS = 20
 JUPYTER_MAX_CELL_LINES = 80
 JUPYTER_MAX_INLINE_DEFINITIONS = 3
+JUPYTER_ENVIRONMENT_LOOKAHEAD_CELLS = 5
+JUPYTER_DATA_CONTRACT_LOOKAHEAD_CELLS = 5
+JUPYTER_MAX_OUTPUT_BYTES_TOTAL = 200_000
+JUPYTER_MAX_OUTPUT_BYTES_PER_CELL = 50_000
+M021_MAX_INLINE_DEFINITIONS = 5
+M021_MAX_INLINE_DEFINITION_LINES = 40
 JUPYTER_SOURCE_CHOICES = ("ipynb", "paired-py")
+JUPYTER_ENVIRONMENT_NAME_HINTS = {
+    "python",
+    "python_version",
+    "runtime",
+    "runtime_version",
+    "dependencies",
+    "dependency_versions",
+    "requirements",
+    "packages",
+    "package_versions",
+}
+JUPYTER_ENVIRONMENT_TEXT_HINTS = (
+    "python",
+    "runtime",
+    "requirements",
+    "dependencies",
+    "packages",
+    "assumptions",
+)
+JUPYTER_DATA_INPUT_NAME_HINTS = {
+    "data_path",
+    "input_path",
+    "dataset",
+    "dataset_path",
+    "source_uri",
+    "input_uri",
+    "inputs",
+    "table_name",
+}
+JUPYTER_DATA_SCHEMA_NAME_HINTS = {
+    "schema",
+    "dtypes",
+    "columns",
+    "expected_columns",
+    "shape",
+    "expected_shape",
+}
+JUPYTER_DATA_CONTRACT_TEXT_HINTS = (
+    "schema",
+    "columns",
+    "dtype",
+    "shape",
+    ".csv",
+    ".parquet",
+    ".json",
+    "s3://",
+    "gs://",
+    "table",
+    "dataset",
+)
+SIDE_EFFECT_BOUNDARY_PATTERN = re.compile(r"side[\\s\\-_]?effects?", re.IGNORECASE)
+SIDE_EFFECT_CALL_NAMES = {
+    "requests.post",
+    "requests.put",
+    "requests.patch",
+    "requests.delete",
+    "httpx.post",
+    "httpx.put",
+    "httpx.patch",
+    "httpx.delete",
+    "subprocess.run",
+    "subprocess.call",
+    "subprocess.check_call",
+    "subprocess.check_output",
+    "subprocess.Popen",
+    "os.remove",
+    "os.rename",
+    "os.replace",
+    "shutil.move",
+    "shutil.copy",
+    "shutil.copy2",
+    "shutil.rmtree",
+}
+SIDE_EFFECT_METHOD_NAMES = {
+    "write_text",
+    "write_bytes",
+    "mkdir",
+    "unlink",
+    "rename",
+    "replace",
+    "touch",
+    "to_csv",
+    "to_parquet",
+    "to_json",
+    "to_excel",
+    "to_sql",
+    "to_pickle",
+    "savefig",
+}
+SECRET_NAME_HINTS = (
+    "password",
+    "passwd",
+    "pwd",
+    "token",
+    "api_key",
+    "apikey",
+    "secret",
+    "client_secret",
+    "private_key",
+    "access_key",
+)
+SECRET_PLACEHOLDER_HINTS = (
+    "your_",
+    "change_me",
+    "placeholder",
+    "example",
+    "dummy",
+    "xxxx",
+    "<",
+    ">",
+)
+SECRET_VALUE_PATTERNS = (
+    re.compile(r"sk-[A-Za-z0-9]{20,}"),
+    re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}", re.IGNORECASE),
+    re.compile(r"AKIA[0-9A-Z]{16}"),
+    re.compile(r"AIza[0-9A-Za-z\\-_]{20,}"),
+)
 _VIOLATIONS_KEY: pytest.StashKey[list["Violation"]] = pytest.StashKey()
 
 

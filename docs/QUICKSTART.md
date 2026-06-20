@@ -1,5 +1,6 @@
 # Quickstart
 This quickstart shows the fastest path to run `pytest-notebook-policy` in a project.
+Runtime baseline: Python `3.12+`.
 
 ## 1) Install
 Add as a development dependency:
@@ -38,8 +39,61 @@ Current rule codes:
 - `J013`: avoid excessive inline definitions; move reusable logic to modules.
 
 Detailed rationale and remediation guidance: [`RULES.md`](RULES.md).
+Report interpretation and policy-tuning workflow: [`REPORT_INTERPRETATION.md`](REPORT_INTERPRETATION.md).
 
-## 4) Optional: enable by default
+## 4) Optional: start with a proportionate rule profile
+Choose a baseline that matches your notebook context, then tighten over time.
+
+PoC / exploratory (fast iteration with core guardrails):
+
+```shell
+uv run pytest-notebook-quality --skip-ruff \
+  --notebook-check-select M001 \
+  --notebook-check-select M003 \
+  --notebook-check-select M006 \
+  --notebook-check-select J011 \
+  notebooks/
+```
+
+MVP / delivery hardening (maintainability + reproducibility):
+
+```shell
+uv run pytest-notebook-quality --skip-ruff \
+  --notebook-check-select M \
+  --notebook-check-select J001 \
+  --notebook-check-select J002 \
+  --notebook-check-select J011 \
+  --notebook-check-select J012 \
+  --notebook-check-select J013 \
+  --notebook-check-ignore J010 \
+  notebooks/
+```
+
+Production / operational (full policy set):
+
+```shell
+uv run pytest-notebook-quality --skip-ruff \
+  --notebook-check-select M \
+  --notebook-check-select J \
+  notebooks/
+```
+
+Equivalent project defaults:
+
+```toml
+[tool.pytest_notebook_policy.quality]
+# PoC profile example:
+# select = ["M001", "M003", "M006", "J011"]
+
+# MVP profile example:
+# select = ["M", "J001", "J002", "J011", "J012", "J013"]
+# ignore = ["J010"]
+
+# Production profile example:
+select = ["M", "J"]
+```
+
+## 5) Optional: enable by default
 Add to `pyproject.toml`:
 
 ```toml
@@ -79,7 +133,7 @@ notebook_check_jupyter_max_cell_lines = "120"
 notebook_check_jupyter_max_inline_definitions = "5"
 ```
 
-## 5) Optional: run combined quality checks
+## 6) Optional: run combined quality checks
 Run Ruff and notebook policy checks together:
 
 ```shell
@@ -161,7 +215,7 @@ Enable optional sync tooling:
 uv add --dev 'pytest-notebook-policy[sync]'
 ```
 
-## 6) Optional: pre-commit hook
+## 7) Optional: pre-commit hook
 Example local hook:
 
 ```yaml
@@ -175,7 +229,7 @@ repos:
         pass_filenames: false
 ```
 
-## 7) Manual validation and remediation workflow
+## 8) Manual validation and remediation workflow
 For a full manual testing walkthrough (including complex notebook remediation and new notebook authoring guidance for both `.ipynb` and `.py`), see:
 
 - [`MANUAL_NOTEBOOK_VALIDATION.md`](MANUAL_NOTEBOOK_VALIDATION.md)

@@ -1,0 +1,63 @@
+{
+  "processed": 8,
+  "ok_or_findings": 8,
+  "hard_failures": [],
+  "results": [
+    {
+      "file": "marimo_examples_ui_file.py",
+      "kind": "marimo",
+      "exit_code": 0,
+      "report_md": "reports/fixtures-real/marimo/marimo_examples_ui_file/notebook-policy-report.md",
+      "report_nbom": "reports/fixtures-real/marimo/marimo_examples_ui_file/notebook-policy-nbom.json"
+    },
+    {
+      "file": "marimo_smoke_cross_cell_md.py",
+      "kind": "marimo",
+      "exit_code": 0,
+      "report_md": "reports/fixtures-real/marimo/marimo_smoke_cross_cell_md/notebook-policy-report.md",
+      "report_nbom": "reports/fixtures-real/marimo/marimo_smoke_cross_cell_md/notebook-policy-nbom.json"
+    },
+    {
+      "file": "gallery_matrix.py",
+      "kind": "marimo",
+      "exit_code": 0,
+      "report_md": "reports/fixtures-real/marimo/gallery_matrix/notebook-policy-report.md",
+      "report_nbom": "reports/fixtures-real/marimo/gallery_matrix/notebook-policy-nbom.json"
+    },
+    {
+      "file": "gallery_earthquake.py",
+      "kind": "marimo",
+      "exit_code": 1,
+      "report_md": "reports/fixtures-real/marimo/gallery_earthquake/notebook-policy-report.md",
+      "report_nbom": "reports/fixtures-real/marimo/gallery_earthquake/notebook-policy-nbom.json"
+    },
+    {
+      "file": "jupyter_running_code_v6_4_7.ipynb",
+      "kind": "jupyter",
+      "exit_code": 0,
+      "report_md": "reports/fixtures-real/jupyter/jupyter_running_code_v6_4_7/notebook-policy-report.md",
+      "report_nbom": "reports/fixtures-real/jupyter/jupyter_running_code_v6_4_7/notebook-policy-nbom.json"
+    },
+    {
+      "file": "jupyter_importing_notebooks_v6_4_7.ipynb",
+      "kind": "jupyter",
+      "exit_code": 1,
+      "report_md": "reports/fixtures-real/jupyter/jupyter_importing_notebooks_v6_4_7/notebook-policy-report.md",
+      "report_nbom": "reports/fixtures-real/jupyter/jupyter_importing_notebooks_v6_4_7/notebook-policy-nbom.json"
+    },
+    {
+      "file": "jupyter_connecting_qt_console_v6_4_7.ipynb",
+      "kind": "jupyter",
+      "exit_code": 1,
+      "report_md": "reports/fixtures-real/jupyter/jupyter_connecting_qt_console_v6_4_7/notebook-policy-report.md",
+      "report_nbom": "reports/fixtures-real/jupyter/jupyter_connecting_qt_console_v6_4_7/notebook-policy-nbom.json"
+    },
+    {
+      "file": "openai_cookbook_assistants_api_overview_42bc4ed.ipynb",
+      "kind": "jupyter",
+      "exit_code": 1,
+      "report_md": "reports/fixtures-real/jupyter/openai_cookbook_assistants_api_overview_42bc4ed/notebook-policy-report.md",
+      "report_nbom": "reports/fixtures-real/jupyter/openai_cookbook_assistants_api_overview_42bc4ed/notebook-policy-nbom.json"
+    }
+  ]
+}

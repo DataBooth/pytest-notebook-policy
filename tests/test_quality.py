@@ -25,7 +25,6 @@ def _namespace(**overrides: object) -> argparse.Namespace:
         "notebook_check_jupyter_max_inline_definitions": None,
         "report_md": None,
         "report_dependency_enrichment": False,
-        "report_dependency_vulns": False,
         "report_nbom_json": None,
     }
     base.update(overrides)
@@ -50,7 +49,6 @@ ignore = ["M004"]
 jupyter_max_inline_definitions = 6
 report_md = "reports/notebook-policy.md"
 report_dependency_enrichment = true
-report_dependency_vulns = true
 report_nbom_json = "reports/notebook-policy-nbom.json"
 """,
         encoding="utf-8",
@@ -72,7 +70,6 @@ report_nbom_json = "reports/notebook-policy-nbom.json"
     assert defaults.max_inline_definitions == 6
     assert defaults.report_md == "reports/notebook-policy.md"
     assert defaults.report_dependency_enrichment is True
-    assert defaults.report_dependency_vulns is True
     assert defaults.report_nbom_json == "reports/notebook-policy-nbom.json"
 
 
@@ -104,7 +101,6 @@ report_md = "reports/default.md"
         notebook_check_jupyter_max_inline_definitions=8,
         report_md="reports/cli.md",
         report_dependency_enrichment=True,
-        report_dependency_vulns=True,
         report_nbom_json="reports/nbom.json",
     )
 
@@ -127,15 +123,8 @@ report_md = "reports/default.md"
     assert settings.report_md is not None
     assert settings.report_md.name == "cli.md"
     assert settings.report_dependency_enrichment is True
-    assert settings.report_dependency_vulns is True
     assert settings.report_nbom_json is not None
     assert settings.report_nbom_json.name == "nbom.json"
-
-
-def test_resolve_quality_settings_enables_enrichment_when_vulns_enabled() -> None:
-    settings = _resolve_quality_settings([], _namespace(report_dependency_vulns=True))
-    assert settings.report_dependency_vulns is True
-    assert settings.report_dependency_enrichment is True
 
 
 def test_write_markdown_report_includes_guidance(tmp_path: Path) -> None:
@@ -165,6 +154,8 @@ def test_write_markdown_report_includes_guidance(tmp_path: Path) -> None:
 
     content = report_path.read_text(encoding="utf-8")
     assert "## 🧪 Notebook policy report" in content
+    assert "### Executive summary" in content
+    assert "deterministic notebook quality snapshot" in content
     assert "| Runtime | `1.23s` |" in content
     assert "### 🔎 Findings" in content
     assert "### 🧭 Notebook surface summary" in content
@@ -173,6 +164,7 @@ def test_write_markdown_report_includes_guidance(tmp_path: Path) -> None:
     assert "s3://bucket/object.parquet" in content
     assert "## Appendix A — Configuration" in content
     assert "## Appendix B — Scanned files" in content
+    assert "## Appendix C — NBOM alignment" in content
     assert "bad.py" in content
     assert "[`M001`](https://github.com/DataBooth/pytest-notebook-policy/blob/main/docs/RULES.md#m001)" in content
     assert "| File | Rule | Line | What | Why this is undesirable | Suggested fix |" in content
@@ -192,8 +184,8 @@ def test_write_markdown_report_dependency_enrichment_appendix(tmp_path: Path) ->
         runtime_seconds=0.5,
     )
     content = report_path.read_text(encoding="utf-8")
-    assert "## Appendix C — Dependency enrichment" in content
-    assert "Vulnerability IDs" in content
+    assert "## Appendix C — NBOM alignment" in content
+    assert "## Appendix D — Dependency enrichment" in content
 
 
 def test_write_nbom_manifest(tmp_path: Path) -> None:
@@ -217,5 +209,3 @@ def test_write_nbom_manifest(tmp_path: Path) -> None:
     assert "\"schema_version\": \"0.1\"" in content
     assert "\"surface\"" in content
     assert "\"dependencies\"" in content
-    assert "\"dependency_vulnerability_lookup\": false" in content
-    assert "\"vulnerability_ids\": []" in content

@@ -1,0 +1,112 @@
+{
+  "dependencies": [],
+  "files": [
+    {
+      "path": "tests/fixtures/real/jupyter_importing_notebooks_v6_4_7.ipynb",
+      "type": ".ipynb"
+    }
+  ],
+  "generated_at": "2026-05-30T23:07:51Z",
+  "runtime_seconds": 0.0022,
+  "schema_version": "0.1",
+  "settings": {
+    "dependency_enrichment": false,
+    "ignore": [],
+    "jupyter_source": "ipynb",
+    "max_cell_lines": 80,
+    "max_code_cells": 20,
+    "max_inline_definitions": 3,
+    "select": [
+      "J001",
+      "J002",
+      "J011",
+      "J012",
+      "J013",
+      "M001",
+      "M002",
+      "M003",
+      "M004",
+      "M005",
+      "M006"
+    ]
+  },
+  "summary": {
+    "data_sources": 0,
+    "dependencies": 0,
+    "file_references": 8,
+    "files_scanned": 1,
+    "http_requests": 0,
+    "imports": 9,
+    "violations": 3
+  },
+  "surface": {
+    "data_sources": [],
+    "file_references": [
+      {
+        "path": "tests/fixtures/real/jupyter_importing_notebooks_v6_4_7.ipynb",
+        "value": ".ipynb"
+      },
+      {
+        "path": "tests/fixtures/real/jupyter_importing_notebooks_v6_4_7.ipynb",
+        "value": "<h4>%s cell</h4>"
+      },
+      {
+        "path": "tests/fixtures/real/jupyter_importing_notebooks_v6_4_7.ipynb",
+        "value": "<pre>%s</pre>"
+      },
+      {
+        "path": "tests/fixtures/real/jupyter_importing_notebooks_v6_4_7.ipynb",
+        "value": "<style type='text/css'>\n%s\n</style>"
+      },
+      {
+        "path": "tests/fixtures/real/jupyter_importing_notebooks_v6_4_7.ipynb",
+        "value": "find a notebook, given its fully qualified name and an optional path\n    \n    This turns \"foo.bar\" into \"foo/bar.ipynb\"\n    and tries turning \"Foo_Bar\" into \"Foo Bar\" if Foo_Bar\n    does not exist."
+      },
+      {
+        "path": "tests/fixtures/real/jupyter_importing_notebooks_v6_4_7.ipynb",
+        "value": "inside_ipython.ipynb"
+      },
+      {
+        "path": "tests/fixtures/real/jupyter_importing_notebooks_v6_4_7.ipynb",
+        "value": "mynotebook.ipynb"
+      },
+      {
+        "path": "tests/fixtures/real/jupyter_importing_notebooks_v6_4_7.ipynb",
+        "value": "other.ipynb"
+      }
+    ],
+    "http_requests": [],
+    "imports": [
+      "IPython",
+      "io",
+      "nbformat",
+      "nbpackage",
+      "os",
+      "pygments",
+      "shutil",
+      "sys",
+      "types"
+    ]
+  },
+  "tool": "pytest-notebook-policy",
+  "violations": [
+    {
+      "code": "J011",
+      "line": 1,
+      "message": "Add a top-of-notebook parameter/configuration cell (within the first three code cells) to make runs reproducible and easier to automate.",
+      "path": "tests/fixtures/real/jupyter_importing_notebooks_v6_4_7.ipynb"
+    },
+    {
+      "code": "J013",
+      "line": 7,
+      "message": "Notebook defines 4 functions/classes inline; keep at most 3 and extract reusable logic into importable modules.",
+      "path": "tests/fixtures/real/jupyter_importing_notebooks_v6_4_7.ipynb"
+    },
+    {
+      "code": "J001",
+      "line": 108,
+      "message": "Avoid notebook magics/shell escapes in policy-checked notebooks; prefer Python code for reliable .ipynb\u2194.py sync.",
+      "path": "tests/fixtures/real/jupyter_importing_notebooks_v6_4_7.ipynb"
+    }
+  ]
+}

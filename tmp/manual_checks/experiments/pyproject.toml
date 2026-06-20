@@ -1,0 +1,15 @@
+[project]
+name = "experiments"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest-notebook-policy[sync]==1.0.0",
+]
+
+[tool.uv.sources]
+pytest-notebook-policy = { workspace = true }

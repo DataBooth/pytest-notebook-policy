@@ -12,8 +12,6 @@ from datetime import UTC, datetime
 from jinja2 import Environment
 from pathlib import Path
 import time
-from urllib import error as urllib_error
-from urllib import request as urllib_request
 import tomllib
 
 from .plugin import (
@@ -108,12 +106,6 @@ FILE_HINT_SUFFIXES = (
     ".ipynb",
     ".py",
 )
-OSV_QUERY_URL = "https://api.osv.dev/v1/query"
-MARKDOWN_REPORT_RENDERER = Environment(  # noqa: S701
-    trim_blocks=True,
-    lstrip_blocks=True,
-    keep_trailing_newline=True,
-).from_string(MARKDOWN_REPORT_TEMPLATE)
 
 
 @dataclass(frozen=True)
@@ -126,7 +118,6 @@ class QualityDefaults:
     max_inline_definitions: int | None = None
     report_md: str | None = None
     report_dependency_enrichment: bool | None = None
-    report_dependency_vulns: bool | None = None
     report_nbom_json: str | None = None
 
 
@@ -140,7 +131,6 @@ class QualitySettings:
     max_inline_definitions: int
     report_md: Path | None
     report_dependency_enrichment: bool
-    report_dependency_vulns: bool
     report_nbom_json: Path | None
 
 
@@ -228,11 +218,6 @@ def main() -> None:
         help="Add optional dependency metadata in the report.",
     )
     parser.add_argument(
-        "--report-dependency-vulns",
-        action="store_true",
-        help="When dependency enrichment is enabled, query OSV for vulnerability IDs.",
-    )
-    parser.add_argument(
         "--report-nbom-json",
         action="store",
         default=None,
@@ -264,10 +249,7 @@ def main() -> None:
     if settings.report_nbom_json is not None:
         analysis = _analyse_notebooks(scanned_files)
         dependencies = (
-            _collect_dependency_metadata(
-                analysis.imports,
-                include_vulns=settings.report_dependency_vulns,
-            )
+            _collect_dependency_metadata(analysis.imports)
             if settings.report_dependency_enrichment
             else []
         )
@@ -375,9 +357,6 @@ def _resolve_quality_settings(paths: list[str], args: argparse.Namespace) -> Qua
     report_dependency_enrichment = args.report_dependency_enrichment or bool(
         defaults.report_dependency_enrichment
     )
-    report_dependency_vulns = args.report_dependency_vulns or bool(defaults.report_dependency_vulns)
-    if report_dependency_vulns:
-        report_dependency_enrichment = True
 
     return QualitySettings(
         select=select,
@@ -388,7 +367,6 @@ def _resolve_quality_settings(paths: list[str], args: argparse.Namespace) -> Qua
         max_inline_definitions=max_inline_definitions,
         report_md=report_md,
         report_dependency_enrichment=report_dependency_enrichment,
-        report_dependency_vulns=report_dependency_vulns,
         report_nbom_json=report_nbom_json,
     )
 
@@ -429,7 +407,6 @@ def _load_project_quality_defaults(paths: list[str]) -> QualityDefaults:
     )
     report_md = _coerce_string(quality_tool.get("report_md"))
     report_dependency_enrichment = _coerce_bool(quality_tool.get("report_dependency_enrichment"))
-    report_dependency_vulns = _coerce_bool(quality_tool.get("report_dependency_vulns"))
     report_nbom_json = _coerce_string(quality_tool.get("report_nbom_json"))
     return QualityDefaults(
         select_tokens=tuple(select_tokens),
@@ -440,7 +417,6 @@ def _load_project_quality_defaults(paths: list[str]) -> QualityDefaults:
         max_inline_definitions=max_inline_definitions,
         report_md=report_md,
         report_dependency_enrichment=report_dependency_enrichment,
-        report_dependency_vulns=report_dependency_vulns,
         report_nbom_json=report_nbom_json,
     )
 
@@ -510,6 +486,12 @@ def _coerce_positive_int(raw: object, fallback: int | None) -> int | None:
     return value
 
 
+MARKDOWN_REPORT_RENDERER = Environment(  # noqa: S701
+    trim_blocks=True,
+    lstrip_blocks=True,
+    keep_trailing_newline=True,
+).from_string(MARKDOWN_REPORT_TEMPLATE)
+
 def _write_markdown_report(
     destination: Path,
     settings: QualitySettings,
@@ -519,14 +501,18 @@ def _write_markdown_report(
     runtime_seconds: float,
 ) -> None:
     analysis = _analyse_notebooks(scanned_files)
-    dependencies = (
-        _collect_dependency_metadata(
-            analysis.imports,
-            include_vulns=settings.report_dependency_vulns,
+    dependencies = _collect_dependency_metadata(analysis.imports) if settings.report_dependency_enrichment else []
+    status = "✅ Pass" if not violations else "⚠️ Findings"
+    if violations:
+        exec_summary_text = (
+            "Policy findings were detected. This report helps you triage reproducibility and "
+            "maintainability risks, then apply targeted remediation with clear rationale."
         )
-        if settings.report_dependency_enrichment
-        else []
-    )
+    else:
+        exec_summary_text = (
+            "No policy findings were detected. This report provides a reproducible quality record "
+            "for notebook governance and release confidence."
+        )
     findings = []
     for violation in violations:
         why, remediation = RULE_GUIDANCE.get(
@@ -546,47 +532,47 @@ def _write_markdown_report(
                 "remediation": _escape_markdown_table_text(remediation),
             }
         )
+    scanned_rows = [
+        {"path": _display_path(path), "kind": path.suffix or "n/a"} for path in scanned_files
+    ]
     file_references = [
-        {"path": _display_path(item.path), "value": _escape_markdown_table_text(item.value)}
-        for item in sorted(
-            analysis.file_references,
-            key=lambda item: (_display_path(item.path), item.value),
-        )
+        {
+            "path": _display_path(item.path),
+            "value": _escape_markdown_table_text(item.value),
+        }
+        for item in sorted(analysis.file_references, key=lambda item: (_display_path(item.path), item.value))
     ]
     http_requests = [
-        {"path": _display_path(item.path), "value": _escape_markdown_table_text(item.value)}
-        for item in sorted(
-            analysis.http_requests,
-            key=lambda item: (_display_path(item.path), item.value),
-        )
+        {
+            "path": _display_path(item.path),
+            "value": _escape_markdown_table_text(item.value),
+        }
+        for item in sorted(analysis.http_requests, key=lambda item: (_display_path(item.path), item.value))
     ]
     data_sources = [
-        {"path": _display_path(item.path), "value": _escape_markdown_table_text(item.value)}
-        for item in sorted(
-            analysis.data_sources,
-            key=lambda item: (_display_path(item.path), item.value),
-        )
+        {
+            "path": _display_path(item.path),
+            "value": _escape_markdown_table_text(item.value),
+        }
+        for item in sorted(analysis.data_sources, key=lambda item: (_display_path(item.path), item.value))
     ]
     dependency_rows = [
         {
-            "import_name": _escape_markdown_table_text(record[0]),
-            "package": _escape_markdown_table_text(record[1]),
-            "version": _escape_markdown_table_text(record[2]),
-            "licence": _escape_markdown_table_text(record[3]),
-            "homepage": _escape_markdown_table_text(record[4]),
-            "vulnerability_ids": _escape_markdown_table_text(", ".join(record[5]) if record[5] else "-"),
+            "import_name": row[0],
+            "package": row[1],
+            "version": row[2],
+            "licence": _escape_markdown_table_text(row[3]),
+            "homepage": _escape_markdown_table_text(row[4]),
         }
-        for record in dependencies
+        for row in dependencies
     ]
-    scanned_file_rows = [
-        {"path": _display_path(scanned_path), "filetype": scanned_path.suffix or "n/a"}
-        for scanned_path in scanned_files
-    ]
-    report_body = MARKDOWN_REPORT_RENDERER.render(
-        status="✅ Pass" if not violations else "⚠️ Findings",
+    nbom_output_path = str(settings.report_nbom_json) if settings.report_nbom_json else "(disabled)"
+    markdown = MARKDOWN_REPORT_RENDERER.render(
+        exec_summary_text=exec_summary_text,
+        status=status,
         generated_at=started_at.strftime("%Y-%m-%d %H:%M:%S UTC"),
         runtime_seconds=f"{runtime_seconds:.2f}",
-        files_scanned_count=len(scanned_files),
+        files_scanned=len(scanned_files),
         violations_count=len(violations),
         findings=findings,
         imports=sorted(analysis.imports),
@@ -603,15 +589,30 @@ def _write_markdown_report(
         max_code_cells=settings.max_code_cells,
         max_cell_lines=settings.max_cell_lines,
         max_inline_definitions=settings.max_inline_definitions,
-        dependency_enrichment=settings.report_dependency_enrichment,
-        dependency_vulnerability_lookup=settings.report_dependency_vulns,
-        nbom_output_path=str(settings.report_nbom_json) if settings.report_nbom_json else "(disabled)",
-        scanned_files=scanned_file_rows,
+        dependency_enrichment_enabled=settings.report_dependency_enrichment,
+        scanned_files=scanned_rows,
+        nbom_requested=settings.report_nbom_json is not None,
+        nbom_output_path=nbom_output_path,
+        dependency_count=len(dependencies),
         dependencies=dependency_rows,
     )
 
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(report_body.rstrip() + "\n", encoding="utf-8")
+    destination.write_text(markdown, encoding="utf-8")
+
+
+def _observed_table(title: str, value_label: str, values: set[Observed]) -> list[str]:
+    lines: list[str] = []
+    lines.append(title)
+    lines.append("")
+    lines.append(f"| File | {value_label} |")
+    lines.append("|---|---|")
+    for observed in sorted(values, key=lambda item: (_display_path(item.path), item.value)):
+        lines.append(f"| `{_display_path(observed.path)}` | `{_escape_markdown_table_text(observed.value)}` |")
+    if not values:
+        lines.append("| `(none)` | `(none)` |")
+    lines.append("")
+    return lines
 
 
 def _analyse_notebooks(scanned_files: list[Path]) -> NotebookAnalysis:
@@ -706,77 +707,26 @@ def _looks_like_data_source(value: str) -> bool:
     return value.lower().startswith(DATA_SOURCE_PREFIXES)
 
 
-def _collect_dependency_metadata(
-    import_names: set[str],
-    *,
-    include_vulns: bool = False,
-) -> list[tuple[str, str, str, str, str, tuple[str, ...]]]:
+def _collect_dependency_metadata(import_names: set[str]) -> list[tuple[str, str, str, str, str]]:
     mapping = importlib_metadata.packages_distributions()
-    rows: list[tuple[str, str, str, str, str, tuple[str, ...]]] = []
-    vulnerability_cache: dict[tuple[str, str], tuple[str, ...]] = {}
+    rows: list[tuple[str, str, str, str, str]] = []
     for import_name in sorted(import_names):
         distributions = sorted(mapping.get(import_name, []))
         if not distributions:
-            rows.append((import_name, "(unresolved)", "-", "-", "-", ()))
+            rows.append((import_name, "(unresolved)", "-", "-", "-"))
             continue
         distribution = distributions[0]
         try:
             metadata = importlib_metadata.metadata(distribution)
             version = importlib_metadata.version(distribution)
         except importlib_metadata.PackageNotFoundError:
-            rows.append((import_name, distribution, "-", "-", "-", ()))
+            rows.append((import_name, distribution, "-", "-", "-"))
             continue
         package_name = metadata.get("Name", distribution)
         license_name = metadata.get("License", "-") or "-"
         homepage = metadata.get("Home-page", "-") or "-"
-        vulnerability_ids: tuple[str, ...] = ()
-        if include_vulns and version not in {"-", ""}:
-            cache_key = (package_name, version)
-            if cache_key not in vulnerability_cache:
-                vulnerability_cache[cache_key] = _query_osv_vulnerability_ids(
-                    package_name=package_name,
-                    version=version,
-                )
-            vulnerability_ids = vulnerability_cache[cache_key]
-        rows.append((import_name, package_name, version, license_name, homepage, vulnerability_ids))
+        rows.append((import_name, package_name, version, license_name, homepage))
     return rows
-
-
-def _query_osv_vulnerability_ids(package_name: str, version: str) -> tuple[str, ...]:
-    payload = json.dumps(
-        {
-            "package": {"name": package_name, "ecosystem": "PyPI"},
-            "version": version,
-        }
-    ).encode("utf-8")
-    request = urllib_request.Request(  # noqa: S310
-        OSV_QUERY_URL,
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    try:
-        with urllib_request.urlopen(request, timeout=5) as response:  # noqa: S310
-            response_body = response.read().decode("utf-8")
-    except (urllib_error.URLError, TimeoutError, OSError, ValueError):
-        return ()
-    try:
-        parsed = json.loads(response_body)
-    except json.JSONDecodeError:
-        return ()
-    vulns = parsed.get("vulns")
-    if not isinstance(vulns, list):
-        return ()
-    vulnerability_ids: set[str] = set()
-    for vuln in vulns:
-        if not isinstance(vuln, dict):
-            continue
-        vuln_id = vuln.get("id")
-        if isinstance(vuln_id, str):
-            stripped = vuln_id.strip()
-            if stripped:
-                vulnerability_ids.add(stripped)
-    return tuple(sorted(vulnerability_ids))
 
 
 def _write_nbom_manifest(
@@ -785,7 +735,7 @@ def _write_nbom_manifest(
     violations: list[Violation],
     scanned_files: list[Path],
     analysis: NotebookAnalysis,
-    dependency_rows: list[tuple[str, str, str, str, str, tuple[str, ...]]],
+    dependency_rows: list[tuple[str, str, str, str, str]],
     started_at: datetime,
     runtime_seconds: float,
 ) -> None:
@@ -803,7 +753,6 @@ def _write_nbom_manifest(
             "max_cell_lines": settings.max_cell_lines,
             "max_inline_definitions": settings.max_inline_definitions,
             "dependency_enrichment": settings.report_dependency_enrichment,
-            "dependency_vulnerability_lookup": settings.report_dependency_vulns,
         },
         "files": [
             {"path": _display_path(path), "type": path.suffix or "n/a"}
@@ -849,7 +798,6 @@ def _write_nbom_manifest(
                 "version": row[2],
                 "licence": row[3],
                 "homepage": row[4],
-                "vulnerability_ids": list(row[5]),
                 "capabilities": sorted(dependency_capability_map.get(row[0], set())),
             }
             for row in dependency_rows
@@ -862,7 +810,6 @@ def _write_nbom_manifest(
             "http_requests": len(analysis.http_requests),
             "data_sources": len(analysis.data_sources),
             "dependencies": len(dependency_rows),
-            "dependencies_with_vulnerabilities": sum(1 for row in dependency_rows if row[5]),
         },
     }
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -870,7 +817,7 @@ def _write_nbom_manifest(
 
 
 def _dependency_capabilities(
-    dependency_rows: list[tuple[str, str, str, str, str, tuple[str, ...]]]
+    dependency_rows: list[tuple[str, str, str, str, str]]
 ) -> dict[str, set[str]]:
     capabilities: dict[str, set[str]] = {}
     for import_name, package_name, *_ in dependency_rows:

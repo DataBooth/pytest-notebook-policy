@@ -1,4 +1,4 @@
-The files in this folder are sourced from public repositories to provide real-world marimo notebook fixtures.
+The files in this folder are sourced from public repositories to provide real-world notebook fixtures.
 
 - marimo_examples_ui_file.py
   Source: https://raw.githubusercontent.com/marimo-team/marimo/main/examples/ui/file.py
@@ -11,3 +11,15 @@ The files in this folder are sourced from public repositories to provide real-wo
 
 - gallery_earthquake.py
   Source: https://raw.githubusercontent.com/marimo-team/gallery-examples/main/notebooks/geo/earthquake.py
+
+- jupyter_running_code_v6_4_7.ipynb
+  Source: https://raw.githubusercontent.com/jupyter/notebook/v6.4.7/docs/source/examples/Notebook/Running%20Code.ipynb
+
+- jupyter_importing_notebooks_v6_4_7.ipynb
+  Source: https://raw.githubusercontent.com/jupyter/notebook/v6.4.7/docs/source/examples/Notebook/Importing%20Notebooks.ipynb
+
+- jupyter_connecting_qt_console_v6_4_7.ipynb
+  Source: https://raw.githubusercontent.com/jupyter/notebook/v6.4.7/docs/source/examples/Notebook/Connecting%20with%20the%20Qt%20Console.ipynb
+
+- openai_cookbook_assistants_api_overview_42bc4ed.ipynb
+  Source: https://raw.githubusercontent.com/openai/openai-cookbook/42bc4ed33a2d1ee308c1f614c073f1b5f760061b/examples/Assistants_API_overview_python.ipynb

@@ -1,0 +1,91 @@
+{
+  "dependencies": [],
+  "files": [
+    {
+      "path": "tests/fixtures/real/openai_cookbook_assistants_api_overview_42bc4ed.ipynb",
+      "type": ".ipynb"
+    }
+  ],
+  "generated_at": "2026-05-30T23:07:52Z",
+  "runtime_seconds": 0.0042,
+  "schema_version": "0.1",
+  "settings": {
+    "dependency_enrichment": false,
+    "ignore": [],
+    "jupyter_source": "ipynb",
+    "max_cell_lines": 80,
+    "max_code_cells": 20,
+    "max_inline_definitions": 3,
+    "select": [
+      "J001",
+      "J002",
+      "J011",
+      "J012",
+      "J013",
+      "M001",
+      "M002",
+      "M003",
+      "M004",
+      "M005",
+      "M006"
+    ]
+  },
+  "summary": {
+    "data_sources": 0,
+    "dependencies": 0,
+    "file_references": 1,
+    "files_scanned": 1,
+    "http_requests": 0,
+    "imports": 4,
+    "violations": 5
+  },
+  "surface": {
+    "data_sources": [],
+    "file_references": [
+      {
+        "path": "tests/fixtures/real/openai_cookbook_assistants_api_overview_42bc4ed.ipynb",
+        "value": "data/language_models_are_unsupervised_multitask_learners.pdf"
+      }
+    ],
+    "http_requests": [],
+    "imports": [
+      "json",
+      "openai",
+      "os",
+      "time"
+    ]
+  },
+  "tool": "pytest-notebook-policy",
+  "violations": [
+    {
+      "code": "J001",
+      "line": 1,
+      "message": "Avoid notebook magics/shell escapes in policy-checked notebooks; prefer Python code for reliable .ipynb\u2194.py sync.",
+      "path": "tests/fixtures/real/openai_cookbook_assistants_api_overview_42bc4ed.ipynb"
+    },
+    {
+      "code": "J011",
+      "line": 1,
+      "message": "Add a top-of-notebook parameter/configuration cell (within the first three code cells) to make runs reproducible and easier to automate.",
+      "path": "tests/fixtures/real/openai_cookbook_assistants_api_overview_42bc4ed.ipynb"
+    },
+    {
+      "code": "J012",
+      "line": 1,
+      "message": "Notebook has 31 code cells; keep notebooks under 20 code cells or split into smaller notebooks/modules.",
+      "path": "tests/fixtures/real/openai_cookbook_assistants_api_overview_42bc4ed.ipynb"
+    },
+    {
+      "code": "J001",
+      "line": 3,
+      "message": "Avoid notebook magics/shell escapes in policy-checked notebooks; prefer Python code for reliable .ipynb\u2194.py sync.",
+      "path": "tests/fixtures/real/openai_cookbook_assistants_api_overview_42bc4ed.ipynb"
+    },
+    {
+      "code": "J013",
+      "line": 7,
+      "message": "Notebook defines 10 functions/classes inline; keep at most 3 and extract reusable logic into importable modules.",
+      "path": "tests/fixtures/real/openai_cookbook_assistants_api_overview_42bc4ed.ipynb"
+    }
+  ]
+}
