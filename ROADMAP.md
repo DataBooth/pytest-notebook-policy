@@ -16,7 +16,7 @@ This document captures likely next steps for `pytest-notebook-policy` after the 
 ## Immediate easy wins (prioritised)
 1. Improve docs for report interpretation and policy tuning workflows.
    - Why first: highest user impact for lowest implementation effort.
-2. Tighten pre-commit and CI quality gates around report regressions.
+2. Tighten prek and CI quality gates around report regressions.
    - Why second: mostly workflow configuration with fast confidence gains.
 3. Expand example notebooks and fixture coverage for real-world edge cases.
    - Why third: incremental additions that improve trust and regression safety.
@@ -49,6 +49,6 @@ This document captures likely next steps for `pytest-notebook-policy` after the 
   - complements deterministic rules with human-readable improvement suggestions
 
 ## Release and ecosystem readiness
-- Tighten pre-commit and CI quality gates around report regressions.
+- Tighten prek and CI quality gates around report regressions.
 - Publish and maintain clear release notes and upgrade guidance.
 - Expand example notebooks and fixture coverage for real-world edge cases.

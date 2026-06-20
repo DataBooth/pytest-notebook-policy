@@ -23,6 +23,12 @@ qa:
   uv run ruff check src tests scripts
   uv run python -m pytest tests
 
+hooks-install:
+  uv run prek install
+
+hooks-run:
+  uv run prek run --all-files
+
 docs-build:
   uv run great-docs build
 

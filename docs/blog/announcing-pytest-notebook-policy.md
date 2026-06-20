@@ -14,7 +14,7 @@ The goal is simple: preserve the agility that makes notebooks powerful, while re
 
 ## Fast with confidence, not fast and fragile
 This package is designed so policy does not become a drag on delivery.
-In the same way well-configured Ruff linting rules, enforced via pre-commit hooks, enable rapid high-quality code delivery, this package is the notebook equivalent: it guides and coaches users towards better outcomes while preserving notebook velocity.
+In the same way well-configured Ruff linting rules, enforced via prek hooks, enable rapid high-quality code delivery, this package is the notebook equivalent: it guides and coaches users towards better outcomes while preserving notebook velocity.
 
 The intent is to help you **move faster confidently**, not slow you down:
 

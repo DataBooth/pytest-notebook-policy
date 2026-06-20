@@ -10,20 +10,23 @@ If you are looking for notebook **best practices**, **assurance**, **validation*
 ## What this package is
 `pytest-notebook-policy` is a lightweight semantic checker for notebook workflows.
 
-It focuses on enforcing notebook patterns that are easy to miss in review, such as:
+It focuses on enforcing notebook patterns that are easy to miss in review.
+
+### Patterns checked
 - `on_change` callback usage where reactivity is clearer
 - cross-cell mutation of shared objects
 - non-idempotent cell behaviour
 - mixed test/helper cells and fixture placement conventions
 
 ## Why this package exists
-marimo already gives you:
+
+### What marimo already covers
 - native notebook testing with `pytest`
 - built-in notebook linting via `marimo check` ([announcement](https://marimo.io/blog/marimo-check))
 
 `pytest-notebook-policy` is designed to complement those tools with opinionated, team-level checks tailored to a stricter “production notebook” style.
 
-In practice:
+### In practice
 - use **Ruff** for general Python quality/security
 - use **marimo check** for core notebook validity and formatting rules
 - use **pytest-notebook-policy** for extra policy checks around reactive design and notebook maintainability
@@ -31,9 +34,9 @@ In practice:
 ## Machine-assisted coding guardrails
 `pytest-notebook-policy` is especially useful as an automated quality gate when notebooks are generated or edited by coding agents (for example Claude, Warp, Codex, or similar tools).
 
-Adding it to pre-commit and CI helps catch marimo-specific issues immediately, so agents can self-correct before code reaches review.
+Adding it to prek hooks and CI helps catch marimo-specific issues immediately, so agents can self-correct before code reaches review.
 
-Example pre-commit hook:
+Example prek hook configuration:
 
 ```yaml
 repos:
@@ -46,9 +49,9 @@ repos:
         pass_filenames: false
 ```
 
-This keeps the feedback loop short:
+### Feedback loop
 - agent proposes notebook edits
-- pre-commit/CI runs Ruff + `pytest-notebook-policy` checks
+- prek/CI runs Ruff + `pytest-notebook-policy` checks
 - agent fixes violations and retries
 
 ## Current rules
@@ -74,16 +77,16 @@ Install in a project:
 uv add --dev pytest-notebook-policy
 ```
 
-Install pre-commit hooks:
+Install prek hooks:
 
 ```shell
-uv run --with pre-commit pre-commit install
+uv run prek install
 ```
 
 Run hooks across all files:
 
 ```shell
-uv run --with pre-commit pre-commit run --all-files
+uv run prek run --all-files
 ```
 
 CI runs on push/PR using `.github/workflows/ci.yml` and executes Ruff plus the test suite.

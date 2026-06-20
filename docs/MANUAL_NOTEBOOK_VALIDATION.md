@@ -31,7 +31,7 @@ Run policy checks directly:
 uv run pytest-notebook-quality --skip-ruff manual_checks
 ```
 
-Optional pre-commit hook (local/manual usage):
+Optional prek hook (local/manual usage):
 
 ```yaml
 repos:
@@ -47,7 +47,8 @@ repos:
 Then run:
 
 ```shell
-uv run --with pre-commit pre-commit run notebook-policy-manual --all-files
+uv run prek install
+uv run prek run notebook-policy-manual --all-files
 ```
 
 ## 2) New notebook guide (`.ipynb` and `.py`)
@@ -164,10 +165,10 @@ When stable, run on the whole manual check area:
 uv run pytest-notebook-quality --skip-ruff manual_checks
 ```
 
-If using pre-commit:
+If using prek:
 
 ```shell
-uv run --with pre-commit pre-commit run notebook-policy-manual --all-files
+uv run prek run notebook-policy-manual --all-files
 ```
 
 ### Stage D: Compliance sign-off
